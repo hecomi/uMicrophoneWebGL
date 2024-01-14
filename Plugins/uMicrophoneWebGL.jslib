@@ -130,7 +130,7 @@ const uMicrophoneWebGLPlugin = {
             }
             
             try {
-                Module.dynCall_v(stopCallback);
+                Module.dynCall_v(this.stopCallback);
             } catch (err) {
                 console.error(err);
             }

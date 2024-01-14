@@ -17,8 +17,9 @@ public class MicrophoneWebGL : MonoBehaviour
     public bool isValid => (micIndex >= 0 && micIndex < devices.Count);
     public List<Device> devices { get; } = new();
     public Device selectedDevice => isValid ? devices[micIndex] : Device.invalid;
-    
-    bool _isBeginRequested = false;
+    public bool isRecording => Lib.IsRecording();
+
+    private bool _isBeginRequested = false;
 
     void OnEnable()
     {
@@ -49,7 +50,7 @@ public class MicrophoneWebGL : MonoBehaviour
     
     public void Begin()
     {
-        if (Lib.IsRecording())
+        if (isRecording)
         {
             Debug.LogError(
                 "Another component has already started recording. " +
@@ -63,10 +64,10 @@ public class MicrophoneWebGL : MonoBehaviour
             return;
         }
         
-        BeginInternal();
+        RequestStart();
     }
 
-    void BeginInternal()
+    private void RequestStart()
     {
         Lib.SetDevice(micIndex);
         Lib.dataEvent.AddListener(OnDataReceived);
@@ -75,26 +76,32 @@ public class MicrophoneWebGL : MonoBehaviour
 
     public void End()
     {
+        if (!isRecording)
+        {
+            return;
+        }
+        
+        Lib.dataEvent.RemoveListener(OnDataReceived);
         Lib.Stop();
     }
 
-    void OnReady()
+    private void OnReady()
     {
         readyEvent.Invoke();
 
         if (_isBeginRequested)
         {
             _isBeginRequested = false;
-            BeginInternal();
+            RequestStart();
         }
     }
 
-    void OnDataReceived(float[] input)
+    private void OnDataReceived(float[] input)
     {
         dataEvent.Invoke(input);
     }
 
-    void OnDeviceListUpdated()
+    private void OnDeviceListUpdated()
     {
         devices.Clear();
         
@@ -103,29 +110,28 @@ public class MicrophoneWebGL : MonoBehaviour
         
         for (int i = 0; i < n; ++i)
         {
-            var id = Lib.GetDeviceId(i);
-            var label = Lib.GetLabel(i);
-            var sampleRate = Lib.GetSampleRate(i);
             var device = new Device()
             {
                 index = i,
-                deviceId = id,
-                label = label,
-                sampleRate = sampleRate,
+                deviceId = Lib.GetDeviceId(i),
+                label = Lib.GetLabel(i),
+                sampleRate = Lib.GetSampleRate(i),
             };
+            
+            Debug.Log($"Device[{i}]: {device.label} (sampleRate: {device.sampleRate}, ID: {device.deviceId})");
+            
             devices.Add(device);
-            Debug.Log($"Device[{i}]: {label} (sampleRate: {sampleRate}, ID: {id})");
         }
         
         deviceListEvent.Invoke();
     }
 
-    void OnStarted()
+    private void OnStarted()
     {
         startEvent.Invoke();
     }
     
-    void OnStopped()
+    private void OnStopped()
     {
         stopEvent.Invoke();
     }
