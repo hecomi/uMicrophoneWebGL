@@ -70,7 +70,6 @@ public class MicrophoneWebGL : MonoBehaviour
     private void RequestStart()
     {
         Lib.SetDevice(micIndex);
-        Lib.dataEvent.AddListener(OnDataReceived);
         Lib.Start();
     }
 
@@ -81,7 +80,6 @@ public class MicrophoneWebGL : MonoBehaviour
             return;
         }
         
-        Lib.dataEvent.RemoveListener(OnDataReceived);
         Lib.Stop();
     }
 

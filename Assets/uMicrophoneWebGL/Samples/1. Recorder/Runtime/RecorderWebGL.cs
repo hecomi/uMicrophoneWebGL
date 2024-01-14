@@ -4,46 +4,58 @@ using UnityEngine.UI;
 namespace uMicrophoneWebGL.Samples
 {
     
-[RequireComponent(typeof(MicrophoneWebGL))]
 public class RecorderWebGL : MonoBehaviour
 {
-    MicrophoneWebGL _mic = null;
-    
-    public float duration = 3f;
+    public MicrophoneWebGL microphoneWebGL;
+    public AudioSource audioSource;
+    public float duration = 10f;
     public Text toggleButtonText;
     public Button playButton;
+    public Text playButtonText;
+    
+    private float[] _buffer = null;
+    private int _bufferSize = 0;
+    private AudioClip _clip;
 
     void OnEnable()
     {
-        _mic = GetComponent<MicrophoneWebGL>();
-        if (!_mic) return;
+        if (!microphoneWebGL) return;
         
-        _mic.dataEvent.AddListener(OnData);
+        microphoneWebGL.dataEvent.AddListener(OnData);
     }
 
     void OnDisable()
     {
-        if (!_mic) return;
+        if (!microphoneWebGL) return;
         
-        _mic.dataEvent.RemoveListener(OnData);
+        microphoneWebGL.dataEvent.RemoveListener(OnData);
+    }
+
+    void Update()
+    {
+        if (audioSource && audioSource.isPlaying)
+        {
+            playButtonText.text = "Stop";
+        }
+        else
+        {
+            playButtonText.text = "Play";
+        }
     }
 
     public void ToggleRecord()
     {
-        if (!_mic || !_mic.isValid) return;
+        if (!microphoneWebGL || !microphoneWebGL.isValid) return;
 
-        bool isRecording = _mic.isRecording;
+        bool isRecording = microphoneWebGL.isRecording;
 
         if (!isRecording)
         {
-            Debug.Log("Begin");
-            _mic.Begin();
+            OnBegin();
         }
         else
         {
-            Debug.Log("End");
-            _mic.End();
-            CreateClip();
+            OnEnd();
         }
 
         isRecording = !isRecording;
@@ -58,20 +70,59 @@ public class RecorderWebGL : MonoBehaviour
             playButton.interactable = !isRecording;
         }
     }
-    
-    public void Play()
+
+    private void OnBegin()
     {
-        Debug.Log("Play");
+        microphoneWebGL.Begin();
+        
+        int n = (int)(AudioSettings.outputSampleRate * duration);
+        if (_buffer == null || _buffer.Length != n)
+        {
+            _buffer = new float[n];
+        }
+        _bufferSize = 0;
+    }
+
+    private void OnEnd()
+    {
+        microphoneWebGL.End();
+        
+        CreateClip();
+    }
+    
+    public void TogglePlay()
+    {
+        if (!audioSource) return;
+
+        if (audioSource.isPlaying)
+        {
+            audioSource.Stop();
+        }
+        else
+        {
+            audioSource.clip = _clip;
+            audioSource.Play();
+        }
     }
 
     private void CreateClip()
     {
-        Debug.Log("Create Clip");
+        if (!audioSource) return;
+        
+        var freq = microphoneWebGL.selectedDevice.sampleRate;
+        _clip = AudioClip.Create("uMicrophoneWebGL-Recorded", _bufferSize, 1, freq, false);
+        var data = new float[_bufferSize];
+        System.Array.Copy(_buffer, data, _bufferSize);
+        _clip.SetData(data, 0);
     }
 
     private void OnData(float[] input)
     {
-        Debug.Log(input.Length);
+        if (input == null) return;
+        int n = input.Length;
+        if (_bufferSize + n >= _buffer.Length) return;
+        System.Array.Copy(input, 0, _buffer, _bufferSize, n);
+        _bufferSize += n;
     }
 }
 

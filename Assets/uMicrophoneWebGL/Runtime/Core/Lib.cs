@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace uMicrophoneWebGL
@@ -179,38 +178,52 @@ public static class Lib
     [DllImport("__Internal", EntryPoint = "uMicrophoneWebGL_SetDevice")]
     public static extern void SetDevice(int index);
 #else
-    public static void SetDevice(int index) {}
+    private static int _deviceIndex = 0;
+
+    public static void SetDevice(int index)
+    {
+        _deviceIndex = index;
+    }
 #endif
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal", EntryPoint = "uMicrophoneWebGL_Start")]
     public static extern void Start();
-#else
-    private static bool _isRecording = false;
-    
-    public static void Start()
-    {
-        Debug.Log("Lib.Start");
-        _isRecording = true;
-    }
-#endif
 
-#if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal", EntryPoint = "uMicrophoneWebGL_Stop")]
     public static extern void Stop();
-#else
-    public static void Stop()
-    {
-        Debug.Log("Lib.Stop");
-        _isRecording = false;
-    }
-#endif
 
-#if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal", EntryPoint = "uMicrophoneWebGL_IsRecording")]
     public static extern bool IsRecording();
 #else
-    public static bool IsRecording() => _isRecording;
+    private static GameObject _recordGameObj = null;
+    private static EditorMicrophoneDataRetriever _micInputRetriever = null;
+    
+    public static void Start()
+    {
+        if (_recordGameObj) return;
+        
+        _recordGameObj = new GameObject("[uMicrophoneWebGL.EditorMicrophoneInputRetriever]");
+        
+        _micInputRetriever = _recordGameObj.AddComponent<EditorMicrophoneDataRetriever>();
+        _micInputRetriever.dataEvent.AddListener(x => dataEvent.Invoke(x));
+        var deviceId = GetDeviceId(_deviceIndex);
+        var freq = GetSampleRate(_deviceIndex);
+        _micInputRetriever.Begin(deviceId, freq);
+        
+        startEvent.Invoke();
+    }
+    
+    public static void Stop()
+    {
+        if (!_recordGameObj) return;
+        
+        _micInputRetriever.End();
+        UnityEngine.Object.Destroy(_recordGameObj);
+        stopEvent.Invoke();
+    }
+
+    public static bool IsRecording() => _recordGameObj;
 #endif
 }
 
