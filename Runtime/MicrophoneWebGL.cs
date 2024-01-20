@@ -1,8 +1,14 @@
 using UnityEngine;
+using UnityEngine.Events;
 using System.Collections.Generic;
 
 namespace uMicrophoneWebGL
 {
+    
+[System.Serializable]
+public class DeviceListEvent : UnityEvent<List<Device>> 
+{
+}
 
 public class MicrophoneWebGL : MonoBehaviour
 {
@@ -11,7 +17,7 @@ public class MicrophoneWebGL : MonoBehaviour
     public TimingEvent readyEvent = new();
     public TimingEvent startEvent = new();
     public TimingEvent stopEvent = new();
-    public TimingEvent deviceListEvent = new();
+    public DeviceListEvent deviceListEvent = new();
     public DataEvent dataEvent = new();
 
     public bool isValid => (micIndex >= 0 && micIndex < devices.Count);
@@ -83,6 +89,11 @@ public class MicrophoneWebGL : MonoBehaviour
         Lib.Stop();
     }
 
+    public void RefreshDeviceList()
+    {
+        Lib.RefreshDeviceList();
+    }
+
     private void OnReady()
     {
         readyEvent.Invoke();
@@ -121,7 +132,7 @@ public class MicrophoneWebGL : MonoBehaviour
             devices.Add(device);
         }
         
-        deviceListEvent.Invoke();
+        deviceListEvent.Invoke(devices);
     }
 
     private void OnStarted()
