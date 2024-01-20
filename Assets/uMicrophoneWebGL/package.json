@@ -1,0 +1,32 @@
+{
+    "name": "com.hecomi.umicrophonewebgl",
+    "version": "1.0.0",
+    "displayName": "uMicrophoneWebGL",
+    "description": "Enables microphone input buffer access in Unity WebGL builds",
+    "author": {
+        "name": "hecomi",
+        "url": "https://tips.hecomi.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/hecomi/uMicrophoneWebGL"
+    },
+    "keywords": [
+        "unity",
+        "webgl",
+        "microphone"
+    ],
+    "license": "MIT",
+    "samples": [
+        {
+            "displayName": "01. Recorder",
+            "description": "Creates an AudioClip based on the microphone input.",
+            "path": "Samples~/01. Recorder"
+        },
+        {
+            "displayName": "02. Waveform",
+            "description": "Displays the waveform of the microphone input in real-time.",
+            "path": "Samples~/02. Waveform"
+        }
+    ]
+}
