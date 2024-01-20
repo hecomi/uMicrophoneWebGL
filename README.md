@@ -44,7 +44,7 @@ Attach `MicrophoneWebGL` component to a GameObject. Once attached, the following
   - Various events can be captured:
   - **Ready Event**
     - Called once after initialization on the JavaScript side and everything is ready.
-  - **Device List Evemt**
+  - **Device List Event**
     - Called when the device list is constructed.
     - A list containing device information is passed as an argument.
   - **Start Event**
@@ -98,10 +98,10 @@ Attach `MicrophoneWebGL` component to a GameObject. Once attached, the following
 ### Methods
 
 - `void Begin()`
-    - Starts a microphone. Does nothing if the microphone is recording.
+    - Starts the microphone. Does nothing if the microphone is recording.
 
 - `void End()`
-    - Stops a microphone. Does nothing if the microphone is not recording.
+    - Stops the microphone. Does nothing if the microphone is not recording.
 
 - `void RefreshDeviceList()`
     - Refreshes the list of microphone devices. The Device List Event is triggered again at the end of the update.
