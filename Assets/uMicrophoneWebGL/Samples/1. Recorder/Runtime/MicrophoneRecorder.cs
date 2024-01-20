@@ -23,33 +23,20 @@ public class MicrophoneRecorder : MonoBehaviour
     private float[] _buffer = null;
     private int _bufferSize = 0;
     private AudioClip _clip;
-
-    void OnEnable()
-    {
-        if (!microphoneWebGL) return;
-        
-        microphoneWebGL.dataEvent.AddListener(OnData);
-        microphoneWebGL.deviceListEvent.AddListener(OnDeviceListUpdated);
-        microphoneWebGL.RefreshDeviceList();
-    }
-
-    void OnDisable()
-    {
-        if (!microphoneWebGL) return;
-        
-        microphoneWebGL.dataEvent.RemoveListener(OnData);
-    }
+    private bool _isPlaying = false;
 
     void Update()
     {
-        if (audioSource && audioSource.isPlaying)
-        {
-            playButtonText.text = "Stop";
-        }
-        else
-        {
-            playButtonText.text = "Play";
-        }
+        UpdatePlayButtonText();
+    }
+    
+    private void UpdatePlayButtonText()
+    {
+        if (!audioSource) return;
+        if (audioSource.isPlaying == _isPlaying) return;
+        
+        _isPlaying = audioSource.isPlaying;
+        playButtonText.text = _isPlaying ? "Stop" : "Play";
     }
 
     public void ToggleRecord()
@@ -60,11 +47,11 @@ public class MicrophoneRecorder : MonoBehaviour
 
         if (!isRecording)
         {
-            OnBegin();
+            Begin();
         }
         else
         {
-            OnEnd();
+            End();
         }
 
         isRecording = !isRecording;
@@ -78,31 +65,6 @@ public class MicrophoneRecorder : MonoBehaviour
         {
             playButton.interactable = !isRecording;
         }
-    }
-
-    private void OnBegin()
-    {
-        if (deviceDropdown)
-        {
-            microphoneWebGL.micIndex = deviceDropdown.value;
-        }
-        
-        microphoneWebGL.Begin();
-
-        int freq = microphoneWebGL.selectedDevice.sampleRate;
-        int n = (int)(freq * maxDuration);
-        if (_buffer == null || _buffer.Length != n)
-        {
-            _buffer = new float[n];
-        }
-        _bufferSize = 0;
-    }
-
-    private void OnEnd()
-    {
-        microphoneWebGL.End();
-        
-        CreateClip();
     }
     
     public void TogglePlay()
@@ -119,8 +81,34 @@ public class MicrophoneRecorder : MonoBehaviour
             audioSource.Play();
         }
     }
+    
+    private void Begin()
+    {
+        if (deviceDropdown)
+        {
+            microphoneWebGL.micIndex = deviceDropdown.value;
+        }
+        
+        microphoneWebGL.Begin();
+    }
+    
+    private void End()
+    {
+        microphoneWebGL.End();
+    }
 
-    private void CreateClip()
+    public void OnBegin()
+    {
+        int freq = microphoneWebGL.selectedDevice.sampleRate;
+        int n = (int)(freq * maxDuration);
+        if (_buffer == null || _buffer.Length != n)
+        {
+            _buffer = new float[n];
+        }
+        _bufferSize = 0;
+    }
+
+    public void OnEnd()
     {
         if (!audioSource) return;
         
@@ -131,7 +119,7 @@ public class MicrophoneRecorder : MonoBehaviour
         _clip.SetData(data, 0);
     }
 
-    private void OnData(float[] input)
+    public void OnData(float[] input)
     {
         if (input == null) return;
         int n = input.Length;
@@ -140,7 +128,7 @@ public class MicrophoneRecorder : MonoBehaviour
         _bufferSize += n;
     }
 
-    private void OnDeviceListUpdated(List<Device> devices)
+    public void OnDeviceListUpdated(List<Device> devices)
     {
         if (!deviceDropdown) return;
         
