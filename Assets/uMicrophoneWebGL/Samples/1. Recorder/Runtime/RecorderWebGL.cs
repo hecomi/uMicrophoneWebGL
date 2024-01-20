@@ -1,17 +1,24 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 namespace uMicrophoneWebGL.Samples
 {
     
 public class RecorderWebGL : MonoBehaviour
 {
+    [Header("Components")]
     public MicrophoneWebGL microphoneWebGL;
     public AudioSource audioSource;
-    public float duration = 10f;
+    
+    [Header("UI")]
     public Text toggleButtonText;
     public Button playButton;
     public Text playButtonText;
+    public Dropdown deviceDropdown;
+        
+    [Header("Record")]
+    public float maxDuration = 10f;
     
     private float[] _buffer = null;
     private int _bufferSize = 0;
@@ -22,6 +29,8 @@ public class RecorderWebGL : MonoBehaviour
         if (!microphoneWebGL) return;
         
         microphoneWebGL.dataEvent.AddListener(OnData);
+        microphoneWebGL.deviceListEvent.AddListener(OnDeviceListUpdated);
+        microphoneWebGL.RefreshDeviceList();
     }
 
     void OnDisable()
@@ -73,9 +82,15 @@ public class RecorderWebGL : MonoBehaviour
 
     private void OnBegin()
     {
-        microphoneWebGL.Begin();
+        if (deviceDropdown)
+        {
+            microphoneWebGL.micIndex = deviceDropdown.value;
+        }
         
-        int n = (int)(AudioSettings.outputSampleRate * duration);
+        microphoneWebGL.Begin();
+
+        int freq = microphoneWebGL.selectedDevice.sampleRate;
+        int n = (int)(freq * maxDuration);
         if (_buffer == null || _buffer.Length != n)
         {
             _buffer = new float[n];
@@ -123,6 +138,22 @@ public class RecorderWebGL : MonoBehaviour
         if (_bufferSize + n >= _buffer.Length) return;
         System.Array.Copy(input, 0, _buffer, _bufferSize, n);
         _bufferSize += n;
+    }
+
+    private void OnDeviceListUpdated(List<Device> devices)
+    {
+        if (!deviceDropdown) return;
+        
+        var options = new List<Dropdown.OptionData>();
+        foreach (var device in devices)
+        {
+            Dropdown.OptionData option = new Dropdown.OptionData()
+            {
+                text = device.label,
+            };
+            options.Add(option);
+        }
+        deviceDropdown.options = options;
     }
 }
 

@@ -124,7 +124,7 @@ public static class Lib
         Action deviceListCallback,
         Action<IntPtr, int> dataCallback)
     {
-        deviceListCallback.Invoke();
+        deviceListEvent.Invoke();
         readyEvent.Invoke();
         isReady = true;
     }
@@ -134,7 +134,10 @@ public static class Lib
     [DllImport("__Internal", EntryPoint = "uMicrophoneWebGL_RefreshDeviceList")]
     public static extern void RefreshDeviceList();
 #else
-    public static void RefreshDeviceList() {}
+    public static void RefreshDeviceList()
+    {
+        deviceListEvent.Invoke();
+    }
 #endif
 
 #if UNITY_WEBGL && !UNITY_EDITOR
