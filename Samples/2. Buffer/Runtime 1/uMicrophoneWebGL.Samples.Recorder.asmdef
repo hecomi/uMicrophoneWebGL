@@ -1,0 +1,16 @@
+{
+    "name": "uMicrophoneWebGL.Samples.WaveForm",
+    "rootNamespace": "",
+    "references": [
+        "GUID:c9ddacf09c33640e58cc11217ca5a8ca"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

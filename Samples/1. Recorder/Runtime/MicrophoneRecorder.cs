@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace uMicrophoneWebGL.Samples
 {
     
-public class RecorderWebGL : MonoBehaviour
+public class MicrophoneRecorder : MonoBehaviour
 {
     [Header("Components")]
     public MicrophoneWebGL microphoneWebGL;
