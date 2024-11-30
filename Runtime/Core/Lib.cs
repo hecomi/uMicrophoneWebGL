@@ -176,6 +176,13 @@ public static class Lib
         return maxFreq > 0 ? maxFreq : 48000;
     }
 #endif
+    
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal", EntryPoint = "uMicrophoneWebGL_GetChannelCount")]
+    public static extern int GetChannelCount(int index);
+#else
+    public static int GetChannelCount(int index) => 1;
+#endif
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal", EntryPoint = "uMicrophoneWebGL_SetDevice")]
@@ -201,6 +208,7 @@ public static class Lib
 #else
     private static GameObject _recordGameObj = null;
     private static EditorMicrophoneDataRetriever _micInputRetriever = null;
+    public static int micChannelsForEditor { get; set; } = 1;
     
     public static void Start()
     {
@@ -210,6 +218,7 @@ public static class Lib
         
         _micInputRetriever = _recordGameObj.AddComponent<EditorMicrophoneDataRetriever>();
         _micInputRetriever.dataEvent.AddListener(x => dataEvent.Invoke(x));
+        _micInputRetriever.micChannels = micChannelsForEditor;
         var deviceId = GetDeviceId(_deviceIndex);
         var freq = GetSampleRate(_deviceIndex);
         _micInputRetriever.Begin(deviceId, freq);
