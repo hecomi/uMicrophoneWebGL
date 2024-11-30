@@ -27,6 +27,8 @@ public class MicrophoneWebGLEditor : Editor
             EditorGUILayout.Separator();
             --EditorGUI.indentLevel;
         }
+        
+        mic.micChannelsForEditor = Preference.microphoneChannels;
 
         serializedObject.ApplyModifiedProperties();
     }
@@ -46,7 +48,7 @@ public class MicrophoneWebGLEditor : Editor
         var devices = new string[n];
         for (int i = 0; i < n; ++i)
         {
-            devices[i] = $"{Lib.GetLabel(i)} ({i})";
+            devices[i] = $"[{i}] {Lib.GetLabel(i)}";
         }
         mic.micIndex = EditorGUILayout.Popup("Device", mic.micIndex, devices);
     }

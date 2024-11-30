@@ -26,6 +26,10 @@ public class MicrophoneWebGL : MonoBehaviour
     public bool isRecording => Lib.IsRecording();
 
     private bool _isBeginRequested = false;
+    
+#if UNITY_EDITOR
+    public int micChannelsForEditor { get; set; } = 1;
+#endif
 
     void OnEnable()
     {
@@ -76,6 +80,9 @@ public class MicrophoneWebGL : MonoBehaviour
     private void RequestStart()
     {
         Lib.SetDevice(micIndex);
+#if UNITY_EDITOR
+        Lib.micChannelsForEditor = micChannelsForEditor;
+#endif
         Lib.Start();
     }
 
@@ -125,9 +132,10 @@ public class MicrophoneWebGL : MonoBehaviour
                 deviceId = Lib.GetDeviceId(i),
                 label = Lib.GetLabel(i),
                 sampleRate = Lib.GetSampleRate(i),
+                channelCount = Lib.GetChannelCount(i),
             };
             
-            Debug.Log($"Device[{i}]: {device.label} (sampleRate: {device.sampleRate}, ID: {device.deviceId})");
+            Debug.Log($"Device[{i}]: {device.label} (sampleRate: {device.sampleRate}, ID: {device.deviceId} Ch: {device.channelCount})");
             
             devices.Add(device);
         }

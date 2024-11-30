@@ -112,8 +112,10 @@ public class MicrophoneRecorder : MonoBehaviour
     {
         if (!audioSource) return;
         
-        var freq = microphoneWebGL.selectedDevice.sampleRate;
-        _clip = AudioClip.Create("uMicrophoneWebGL-Recorded", _bufferSize, 1, freq, false);
+        var device = microphoneWebGL.selectedDevice;
+        var freq = device.sampleRate;
+        var ch = device.channelCount;
+        _clip = AudioClip.Create("uMicrophoneWebGL-Recorded", _bufferSize + freq, ch, freq, false);
         var data = new float[_bufferSize];
         System.Array.Copy(_buffer, data, _bufferSize);
         _clip.SetData(data, 0);
@@ -137,7 +139,7 @@ public class MicrophoneRecorder : MonoBehaviour
         {
             Dropdown.OptionData option = new Dropdown.OptionData()
             {
-                text = device.label,
+                text = $"{device.label} (Ch: {device.channelCount})",
             };
             options.Add(option);
         }

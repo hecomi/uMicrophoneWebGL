@@ -16,7 +16,11 @@ const uMicrophoneWebGLPlugin = {
             this.stopCallback = stopCallback;
             this.deviceListCallback = deviceListCallback;
             this.dataCallback = dataCallback;
-            await this.updateDeviceList();
+            try {
+                await uMicrophoneWebGL.updateDeviceList();
+            } catch (err) {
+                console.error(err);
+            }
         },
         
         updateDeviceList: async function() {
@@ -30,7 +34,9 @@ const uMicrophoneWebGLPlugin = {
             // before calling enumerateDevices, this is needed.
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             stream.getTracks().forEach(track => track.stop());
-            
+
+            const audioContext = new AudioContext();
+
             this.devices = await navigator.mediaDevices.enumerateDevices();
             this.devices = this.devices.filter(x => x.kind === "audioinput");
             for (const device of this.devices) {
@@ -43,11 +49,15 @@ const uMicrophoneWebGLPlugin = {
                     },
                     video: false,
                 });
+                const source = audioContext.createMediaStreamSource(stream);
                 const audioTrack = stream.getAudioTracks()[0];
                 const settings = audioTrack.getSettings();
                 device.sampleRate = settings.sampleRate;
+                device.channelCount = settings.channelCount;
                 stream.getTracks().forEach(track => track.stop());
             }
+
+            await audioContext.close();
             
             Module.dynCall_v(this.deviceListCallback);
         },
@@ -82,8 +92,8 @@ const uMicrophoneWebGLPlugin = {
             try { 
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: { 
-                        device: device.deviceId,
-                        sampleRate: { ideal: 44100 },
+                        deviceId: device.deviceId,
+                        sampleRate: { ideal: device.sampleRate },
                     },
                     video: false,
                 });
@@ -128,6 +138,8 @@ const uMicrophoneWebGLPlugin = {
                 this.audioContext.close();
                 this.audioContext = null;
             }
+
+            this.channels = 1;
             
             try {
                 Module.dynCall_v(this.stopCallback);
@@ -175,6 +187,11 @@ const uMicrophoneWebGLPlugin = {
     uMicrophoneWebGL_GetSampleRate: function(index) {
         const device = uMicrophoneWebGL.getDevice(index);
         return device ? device.sampleRate : 0;
+    },
+    
+    uMicrophoneWebGL_GetChannelCount: function(index) {
+        const device = uMicrophoneWebGL.getDevice(index);
+        return device ? device.channelCount : 0;
     },
     
     uMicrophoneWebGL_SetDevice: function(index) {

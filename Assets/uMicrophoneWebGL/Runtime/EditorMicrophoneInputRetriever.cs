@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
 
+using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace uMicrophoneWebGL
 {
@@ -10,6 +12,7 @@ public class EditorMicrophoneDataRetriever : MonoBehaviour
 {
     public DataEvent dataEvent { get; } = new DataEvent();
     public bool playMicrophoneSound { get; set; } = false;
+    public int micChannels { get; set; } = 1;
     
     private AudioSource _source;
     private AudioClip _clip;
@@ -36,7 +39,7 @@ public class EditorMicrophoneDataRetriever : MonoBehaviour
             {
                 _data = new float[_bufferSize];
             }
-            System.Array.Copy(_buffer, _data, _bufferSize);
+            Array.Copy(_buffer, _data, _bufferSize);
             _bufferSize = 0;
         }
         
@@ -84,18 +87,30 @@ public class EditorMicrophoneDataRetriever : MonoBehaviour
 
     void OnAudioFilterRead(float[] input, int channels)
     {
-        int n = input.Length;
-
         lock (_lock)
         {
+            int ch = Math.Max(micChannels, 1);
+            int n = input.Length / ch;
             if (_bufferSize + n >= _buffer.Length) return;
-            System.Array.Copy(input, 0, _buffer, _bufferSize, n);
+
+            if (ch > 1)
+            {
+                for (int i = 0; i < n; ++i)
+                {
+                    _buffer[_bufferSize + i] = input[i * ch];
+                }
+            }
+            else
+            {
+                Array.Copy(input, 0, _buffer, _bufferSize, n);
+            }
+
             _bufferSize += n;
         }
 
         if (!playMicrophoneSound)
         {
-            System.Array.Clear(input, 0, n);
+            Array.Clear(input, 0, input.Length);
         }
     }
 }
